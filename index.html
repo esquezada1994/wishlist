@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Roulette Pro 🎰</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #14161a;
+            --panel: #1e2128;
+            --accent: #d4a373;
+            --text-main: #e9edc9;
+            --text-dim: #7f847c;
+            --win: #2a9d8f;
+            /* Paleta Matte Nordic */
+            --m1: #264653; --m2: #2a9d8f; --m3: #e9c46a; --m4: #f4a261; --m5: #e76f51;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- Layout de Columnas --- */
+        .sidebar {
+            width: 300px;
+            background: var(--panel);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #333;
+            border-left: 1px solid #333;
+            z-index: 5;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px;
+            background: radial-gradient(circle, #1e2128 0%, #14161a 100%);
+        }
+
+        h2 { 
+            font-size: 1rem; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 20px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .item-card {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            border-left: 5px solid transparent;
+        }
+        .pending-card { border-left-color: var(--m4); }
+        .won-card { border-left-color: var(--win); opacity: 0.7; }
+
+        .price-tag { display: block; font-size: 0.75rem; color: var(--accent); font-weight: bold; margin-top: 5px; }
+
+        /* --- Contenedor de Ruleta --- */
+        .wheel-wrapper {
+            position: relative;
+            width: 550px;
+            height: 550px;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 80px rgba(0,0,0,0.8);
+        }
+
+        /* Diamante Selector (Superior) */
+        .selector-hand {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.6));
+        }
+
+        /* --- Panel de Configuración Lateral --- */
+        .settings-overlay {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 350px;
+            height: 100%;
+            background: var(--panel);
+            z-index: 100;
+            padding: 30px;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.7);
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 2px solid var(--accent);
+        }
+        .settings-overlay.open { right: 0; }
+
+        .gear-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 50%;
+            width: 50px; height: 50px;
+            cursor: pointer;
+            z-index: 110;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        textarea {
+            width: 100%; height: 280px;
+            background: #0f1114; color: #a9ad94;
+            border: 1px solid #3d414d; border-radius: 8px;
+            padding: 12px; font-family: monospace; font-size: 11px;
+            margin-top: 15px; resize: none;
+        }
+
+        #spinBtn {
+            margin-top: 40px;
+            padding: 20px 80px;
+            background: var(--accent);
+            color: #1a1c22;
+            font-weight: 800;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 0 #9b724b;
+        }
+        #spinBtn:active { transform: translateY(6px); box-shadow: 0 4px 0 #9b724b; }
+        #spinBtn:disabled { background: #444; box-shadow: none; color: #777; cursor: not-allowed; }
+
+        /* --- Modal de Ganador --- */
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: var(--panel);
+            padding: 60px; border-radius: 40px; text-align: center;
+            z-index: 200; border: 2px solid var(--accent);
+            box-shadow: 0 0 200px rgba(0,0,0,0.9);
+            width: 400px;
+        }
+        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.92); z-index: 199; }
+        .modal button { background: var(--accent); border: none; padding: 12px 40px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 style="color: var(--m4)"><i data-lucide="clock"></i> Pendientes</h2>
+        <div class="scroll-area" id="pendingList"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="wheel-wrapper">
+            <div class="selector-hand">
+                <svg width="50" height="60" viewBox="0 0 50 60">
+                    <path d="M25 60 L50 25 L25 0 L0 25 Z" fill="#d4a373" stroke="#14161a" stroke-width="3"/>
+                    <circle cx="25" cy="25" r="5" fill="#14161a"/>
+                </svg>
+            </div>
+            <canvas id="canvas" width="700" height="700"></canvas>
+        </div>
+        <button id="spinBtn" onclick="spin()">GIRAR RULETA</button>
+    </div>
+
+    <div class="sidebar">
+        <h2 style="color: var(--win)"><i data-lucide="trophy"></i> Ganados</h2>
+        <div class="scroll-area" id="wonList"></div>
+    </div>
+
+    <button class="gear-btn" onclick="toggleSettings()">
+        <i data-lucide="settings"></i>
+    </button>
+    
+    <div class="settings-overlay" id="setPanel">
+        <h3 style="color: var(--accent)">Configuración</h3>
+        <textarea id="jsonInput">[
+  {"NumeroItem": 1, "NombreItem": "Cena Sushi", "PrecioItem": 50, "Estado": "pendiente"},
+  {"NumeroItem": 2, "NombreItem": "Smartphone", "PrecioItem": 800, "Estado": "pendiente"},
+  {"NumeroItem": 3, "NombreItem": "Zapatos Pro", "PrecioItem": 120, "Estado": "pendiente"},
+  {"NumeroItem": 4, "NombreItem": "Laptop Gamer", "PrecioItem": 1500, "Estado": "pendiente"}
+]</textarea>
+        
+        <div style="margin: 20px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <label style="font-size: 0.8rem;">Siga Part. (Cantidad):</label>
+                <input type="number" id="sigaN" value="2" min="0" style="width: 50px;">
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <label style="font-size: 0.8rem;">Probabilidad Total (%):</label>
+                <input type="number" id="sigaP" value="15" min="0" max="90" style="width: 50px;">
+            </div>
+        </div>
+        
+        <button onclick="loadData()" style="width: 100%; padding: 12px; background: var(--win); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">ACTUALIZAR RULETA</button>
+        <button onclick="copyJson()" style="width: 100%; padding: 12px; margin-top: 10px; background: var(--m1); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">COPIAR JSON ACTUAL</button>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="modal" id="modal">
+        <p style="text-transform: uppercase; letter-spacing: 3px; color: var(--accent); margin-bottom: 0;">Resultado</p>
+        <h1 id="winnerName" style="font-size: 2.5rem; margin: 15px 0;">---</h1>
+        <h3 id="modalType" style="color: var(--text-dim); font-weight: 400;"></h3>
+        <button onclick="closeModal()">ACEPTAR</button>
+    </div>
+
+    <script>
+        const palette = ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#8ab17d', '#b5838d'];
+        let allItems = [];
+        let activeItems = [];
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        function toggleSettings() { document.getElementById('setPanel').classList.toggle('open'); }
+
+        function loadData() {
+            try {
+                const inputVal = document.getElementById('jsonInput').value;
+                allItems = JSON.parse(inputVal);
+                
+                let pSigaTotal = parseInt(document.getElementById('sigaP').value) / 100;
+                let nSiga = parseInt(document.getElementById('sigaN').value);
+
+                // CORRECCIÓN: Si no hay items de "Siga participando", la probabilidad reservada debe ser 0
+                if (nSiga <= 0) {
+                    pSigaTotal = 0;
+                }
+
+                const pendingPrizes = allItems.filter(i => i.Estado === "pendiente").map(i => ({...i, type:'prize'}));
+                activeItems = [...pendingPrizes];
+                
+                if (nSiga > 0) {
+                    const probPerSiga = pSigaTotal / nSiga;
+                    for(let i=0; i<nSiga; i++) {
+                        activeItems.push({ NombreItem: "☘️ Reintentar", PrecioItem: 0, type: 'siga', fixedProb: probPerSiga });
+                    }
+                }
+
+                calculateWeights(pSigaTotal);
+                updateUILists();
+                drawWheel();
+            } catch(e) { alert("Error en el formato JSON."); }
+        }
+
+        function calculateWeights(pSigaTotal) {
+            const pAvailableForPrizes = 1 - pSigaTotal;
+            const prizes = activeItems.filter(i => i.type === 'prize');
+            
+            if (prizes.length === 0 && activeItems.length > 0) {
+                // Solo quedan items de reintento
+                activeItems.forEach(i => i.prob = 1 / activeItems.length);
+                return;
+            }
+
+            let totalInversePrice = 0;
+            prizes.forEach(i => totalInversePrice += (1 / i.PrecioItem));
+
+            activeItems.forEach(item => {
+                if(item.type === 'prize') {
+                    item.prob = ((1 / item.PrecioItem) / totalInversePrice) * pAvailableForPrizes;
+                } else {
+                    item.prob = item.fixedProb;
+                }
+            });
+        }
+
+        function drawWheel() {
+            const centerX = canvas.width/2;
+            const centerY = canvas.height/2;
+            const radius = canvas.width/2 - 20;
+            let startAngle = 0;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            activeItems.forEach((item, i) => {
+                const sliceAngle = item.prob * 2 * Math.PI;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                ctx.fillStyle = item.type === 'siga' ? '#14161a' : palette[i % palette.length];
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.1)";
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "white";
+                ctx.font = "bold 16px Inter, sans-serif";
+                ctx.fillText(item.NombreItem.substring(0, 22), radius - 40, 8);
+                ctx.restore();
+                startAngle += sliceAngle;
+            });
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = "#d4a373";
+            ctx.fill();
+        }
+
+        function spin() {
+            if(isSpinning || activeItems.length === 0) return;
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+
+            const duration = 6000; 
+            const extraRotations = 10 + Math.random() * 5;
+            const totalRotationToApply = extraRotations * 2 * Math.PI;
+            const startTimestamp = performance.now();
+
+            function animate(now) {
+                const elapsed = now - startTimestamp;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 4);
+                const rotationAtFrame = currentRotation + (totalRotationToApply * ease);
+
+                ctx.save();
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.rotate(rotationAtFrame);
+                ctx.translate(-canvas.width/2, -canvas.height/2);
+                drawWheel();
+                ctx.restore();
+
+                if(progress < 1) requestAnimationFrame(animate);
+                else {
+                    currentRotation = rotationAtFrame % (2 * Math.PI);
+                    processWinner();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function processWinner() {
+            let resultAngle = (1.5 * Math.PI - currentRotation) % (2 * Math.PI);
+            if (resultAngle < 0) resultAngle += 2 * Math.PI;
+
+            let accumulated = 0;
+            let winner = activeItems[0];
+
+            for(let item of activeItems) {
+                const slice = item.prob * 2 * Math.PI;
+                if (resultAngle >= accumulated && resultAngle < (accumulated + slice)) {
+                    winner = item;
+                    break;
+                }
+                accumulated += slice;
+            }
+
+            if(winner.type === 'prize') {
+                const master = allItems.find(x => x.NumeroItem === winner.NumeroItem);
+                if(master) master.Estado = 'ganado';
+                confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+                document.getElementById('modalType').innerText = "¡A la lista de ganados!";
+            } else {
+                document.getElementById('modalType').innerText = "¡No te rindas!";
+            }
+
+            document.getElementById('winnerName').innerText = winner.NombreItem;
+            document.getElementById('modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            updateUILists();
+        }
+
+        function updateUILists() {
+            document.getElementById('pendingList').innerHTML = allItems.filter(i => i.Estado === 'pendiente')
+                .map(i => `<div class="item-card pending-card"><b>${i.NombreItem}</b><span class="price-tag">$${i.PrecioItem}</span></div>`).join('');
+            document.getElementById('wonList').innerHTML = allItems.filter(i => i.Estado === 'ganado')
+                .map(i => `<div class="item-card won-card"><b>${i.NombreItem}</b><span class="price-tag">Ganado ✅</span></div>`).join('');
+            document.getElementById('jsonInput').value = JSON.stringify(allItems, null, 2);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('spinBtn').disabled = false;
+            isSpinning = false;
+            loadData();
+        }
+
+        function copyJson() {
+            const txt = document.getElementById('jsonInput');
+            txt.select();
+            document.execCommand('copy');
+            alert("JSON copiado.");
+        }
+
+        lucide.createIcons();
+        loadData();
+    </script>
+</body>
+</html>
