@@ -3,405 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist Roulette Pro 🎰</title>
+    <title>Wishlist Roulette: Final Edition 💎</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg: #14161a;
-            --panel: #1e2128;
+            --bg: #0d0f14;
+            --panel: #161a21;
             --accent: #d4a373;
-            --text-main: #e9edc9;
-            --text-dim: #7f847c;
+            --text-main: #e6edf3;
             --win: #2a9d8f;
-            /* Paleta Matte Nordic */
-            --m1: #264653; --m2: #2a9d8f; --m3: #e9c46a; --m4: #f4a261; --m5: #e76f51;
+            --bonus: #ec4899;
         }
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- Layout de Columnas --- */
-        .sidebar {
-            width: 300px;
-            background: var(--panel);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #333;
-            border-left: 1px solid #333;
-            z-index: 5;
-        }
+        .sidebar { width: 320px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #2d3139; }
+        .scroll-area { flex: 1; overflow-y: auto; padding-right: 5px; }
 
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 20px;
-            background: radial-gradient(circle, #1e2128 0%, #14161a 100%);
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; padding: 30px 20px; }
 
-        h2 { 
-            font-size: 1rem; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            margin-bottom: 20px; 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .item-card { background: #1c2128; padding: 12px; border-radius: 12px; margin-bottom: 10px; position: relative; border-left: 5px solid #444; }
+        .tier-tag { font-size: 0.6rem; text-transform: uppercase; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; display: inline-block; color: #fff; }
+        .prob-val { position: absolute; right: 12px; bottom: 12px; font-weight: 800; color: var(--accent); font-size: 0.85rem; }
 
-        .scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
+        .wheel-box { position: relative; width: 480px; height: 480px; flex-shrink: 0; }
+        #canvas { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #2d3139; }
+        .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 50; }
 
-        .item-card {
-            background: rgba(255,255,255,0.03);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            font-size: 0.9rem;
-            border-left: 5px solid transparent;
-        }
-        .pending-card { border-left-color: var(--m4); }
-        .won-card { border-left-color: var(--win); opacity: 0.7; }
+        /* --- MINIJUEGO CAJAS --- */
+        .bonus-container { width: 100%; max-width: 600px; display: none; flex-direction: column; align-items: center; background: rgba(236, 72, 153, 0.05); padding: 25px; border-radius: 25px; border: 2px dashed var(--bonus); margin-top: 30px; }
+        .gifts-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 20px; }
+        .gift-box { width: 100px; height: 100px; background: var(--bonus); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: 0.3s; position: relative; }
+        .gift-box:hover { transform: scale(1.1) rotate(5deg); }
+        .gift-box.open { background: #1c2128; border: 2px solid var(--bonus); cursor: default; }
+        .gift-content { font-size: 0.7rem; text-align: center; font-weight: bold; display: none; padding: 5px; }
+        .gift-box.open .gift-content { display: block; }
+        .gift-box.open .gift-icon { display: none; }
 
-        .price-tag { display: block; font-size: 0.75rem; color: var(--accent); font-weight: bold; margin-top: 5px; }
+        .points-panel { background: #11141a; border: 2px solid var(--accent); padding: 10px 40px; border-radius: 25px; margin-bottom: 20px; text-align: center; }
+        .points-val { background: transparent; border: none; border-bottom: 2px solid var(--accent); color: var(--accent); font-size: 2rem; width: 80px; text-align: center; font-weight: 900; outline: none; }
+        
+        button { border: none; border-radius: 50px; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        .btn-spin { margin-top: 15px; padding: 15px 60px; background: var(--accent); color: #111; font-size: 1.1rem; box-shadow: 0 6px 0 #9b724b; }
+        .btn-toggle { background: transparent; color: var(--bonus); border: 2px solid var(--bonus); padding: 8px 20px; margin-top: 80px; font-size: 0.7rem; letter-spacing: 1px; }
 
-        /* --- Contenedor de Ruleta --- */
-        .wheel-wrapper {
-            position: relative;
-            width: 550px;
-            height: 550px;
-        }
+        .settings-side { position: fixed; right: -450px; top: 0; width: 400px; height: 100%; background: #11141a; padding: 25px; z-index: 100; transition: 0.4s; border-left: 2px solid var(--accent); overflow-y: auto; }
+        .settings-side.open { right: 0; }
+        textarea { width: 100%; background: #000; color: #8fb339; border: 1px solid #333; padding: 10px; font-family: monospace; font-size: 10px; margin-bottom: 15px; border-radius: 8px; }
 
-        #canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            box-shadow: 0 0 80px rgba(0,0,0,0.8);
-        }
-
-        /* Diamante Selector (Superior) */
-        .selector-hand {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 30;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.6));
-        }
-
-        /* --- Panel de Configuración Lateral --- */
-        .settings-overlay {
-            position: fixed;
-            right: -400px;
-            top: 0;
-            width: 350px;
-            height: 100%;
-            background: var(--panel);
-            z-index: 100;
-            padding: 30px;
-            box-shadow: -10px 0 40px rgba(0,0,0,0.7);
-            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            border-left: 2px solid var(--accent);
-        }
-        .settings-overlay.open { right: 0; }
-
-        .gear-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--panel);
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            border-radius: 50%;
-            width: 50px; height: 50px;
-            cursor: pointer;
-            z-index: 110;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        textarea {
-            width: 100%; height: 280px;
-            background: #0f1114; color: #a9ad94;
-            border: 1px solid #3d414d; border-radius: 8px;
-            padding: 12px; font-family: monospace; font-size: 11px;
-            margin-top: 15px; resize: none;
-        }
-
-        #spinBtn {
-            margin-top: 40px;
-            padding: 20px 80px;
-            background: var(--accent);
-            color: #1a1c22;
-            font-weight: 800;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 1.4rem;
-            letter-spacing: 2px;
-            box-shadow: 0 10px 0 #9b724b;
-        }
-        #spinBtn:active { transform: translateY(6px); box-shadow: 0 4px 0 #9b724b; }
-        #spinBtn:disabled { background: #444; box-shadow: none; color: #777; cursor: not-allowed; }
-
-        /* --- Modal de Ganador --- */
-        .modal {
-            display: none; position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); background: var(--panel);
-            padding: 60px; border-radius: 40px; text-align: center;
-            z-index: 200; border: 2px solid var(--accent);
-            box-shadow: 0 0 200px rgba(0,0,0,0.9);
-            width: 400px;
-        }
-        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.92); z-index: 199; }
-        .modal button { background: var(--accent); border: none; padding: 12px 40px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 40px; border-radius: 30px; z-index: 200; text-align: center; border: 2px solid var(--accent); width: 350px; }
+        .modal-content { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 199; }
+        .modal-btn { background: var(--accent); color: #111; padding: 12px 50px; border-radius: 12px; font-weight: 900; margin-top: 20px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2 style="color: var(--m4)"><i data-lucide="clock"></i> Pendientes</h2>
+        <h2>⏳ PENDIENTES</h2>
         <div class="scroll-area" id="pendingList"></div>
     </div>
 
     <div class="main-content">
-        <div class="wheel-wrapper">
-            <div class="selector-hand">
-                <svg width="50" height="60" viewBox="0 0 50 60">
-                    <path d="M25 60 L50 25 L25 0 L0 25 Z" fill="#d4a373" stroke="#14161a" stroke-width="3"/>
-                    <circle cx="25" cy="25" r="5" fill="#14161a"/>
-                </svg>
-            </div>
-            <canvas id="canvas" width="700" height="700"></canvas>
+        <div class="points-panel">
+            <div style="font-size: 0.6rem; letter-spacing: 2px; color: var(--accent);">PUNTOS ACUMULADOS</div>
+            <input type="number" id="currentPoints" value="5" step="5" min="0" class="points-val" onchange="loadData()">
+            <div id="luckMsg" style="font-size: 0.7rem; font-weight: bold; margin-top: 5px;"></div>
         </div>
-        <button id="spinBtn" onclick="spin()">GIRAR RULETA</button>
+
+        <div class="wheel-box">
+            <div class="pointer"><svg width="40" height="50"><path d="M20 50 L40 10 L0 10 Z" fill="#d4a373" stroke="#000" stroke-width="2"/></svg></div>
+            <canvas id="canvas" width="800" height="800"></canvas>
+            <button id="spinBtn" class="btn-spin" onclick="spin()" style="position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%); width: 300px;">GIRAR RULETA</button>
+        </div>
+
+        <button id="toggleBonusBtn" class="btn-toggle" onclick="toggleBonus()">✨ REVELAR REGALOS MISTERIOSOS ✨</button>
+
+        <div id="bonusSection" class="bonus-container">
+            <h3 style="color: var(--bonus); margin: 0; letter-spacing: 2px;">MAGIC GIFT BOXES</h3>
+            <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">Premios de $0. Elige una caja.</p>
+            <div class="gifts-grid" id="giftsGrid"></div>
+        </div>
     </div>
 
-    <div class="sidebar">
-        <h2 style="color: var(--win)"><i data-lucide="trophy"></i> Ganados</h2>
+    <div class="sidebar" style="border-left: 1px solid #2d3139; border-right: none;">
+        <h2>🏆 GANADOS</h2>
         <div class="scroll-area" id="wonList"></div>
     </div>
 
-    <button class="gear-btn" onclick="toggleSettings()">
+    <button style="position:fixed; top:20px; right:20px; z-index:110; background:none; border:none; color:var(--accent); cursor:pointer;" onclick="document.getElementById('setPanel').classList.toggle('open')">
         <i data-lucide="settings"></i>
     </button>
-    
-    <div class="settings-overlay" id="setPanel">
-        <h3 style="color: var(--accent)">Configuración</h3>
-        <textarea id="jsonInput">[
-  {"NumeroItem": 1, "NombreItem": "Cena Sushi", "PrecioItem": 50, "Estado": "pendiente"},
-  {"NumeroItem": 2, "NombreItem": "Smartphone", "PrecioItem": 800, "Estado": "pendiente"},
-  {"NumeroItem": 3, "NombreItem": "Zapatos Pro", "PrecioItem": 120, "Estado": "pendiente"},
-  {"NumeroItem": 4, "NombreItem": "Laptop Gamer", "PrecioItem": 1500, "Estado": "pendiente"}
+
+    <div class="settings-side" id="setPanel">
+        <h3 style="color:var(--accent); margin-top:0">Configuración</h3>
+        <label style="font-size:0.7rem">1. Wishlist (JSON Principal)</label>
+        <textarea id="jsonWish" style="height:250px"></textarea>
+        
+        <label style="font-size:0.7rem">2. Niveles y Pesos (JSON Tiers)</label>
+        <textarea id="jsonTiers" style="height:150px">[
+  {"level": 1, "name": "Nivel 1", "min": 1, "max": 50, "weight": 80},
+  {"level": 2, "name": "Nivel 2", "min": 51, "max": 100, "weight": 10},
+  {"level": 3, "name": "Nivel 3", "min": 101, "max": 150, "weight":6},
+  {"level": 4, "name": "Nivel 4", "min": 151, "max": 250, "weight": 3},
+  {"level": 5, "name": "Nivel 5", "min": 251, "max": 9999, "weight": 1}
 ]</textarea>
         
-        <div style="margin: 20px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <label style="font-size: 0.8rem;">Siga Part. (Cantidad):</label>
-                <input type="number" id="sigaN" value="2" min="0" style="width: 50px;">
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <label style="font-size: 0.8rem;">Probabilidad Total (%):</label>
-                <input type="number" id="sigaP" value="15" min="0" max="90" style="width: 50px;">
-            </div>
-        </div>
-        
-        <button onclick="loadData()" style="width: 100%; padding: 12px; background: var(--win); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">ACTUALIZAR RULETA</button>
-        <button onclick="copyJson()" style="width: 100%; padding: 12px; margin-top: 10px; background: var(--m1); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">COPIAR JSON ACTUAL</button>
+        <label style="font-size:0.7rem">Siga Participando (%)</label>
+        <input type="number" id="sigaP" value="1" style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #333; margin-bottom:15px; border-radius:8px">
+
+        <button onclick="loadData()" style="width:100%; padding:12px; background:var(--win); border:none; color:white; border-radius:8px; font-weight:bold;">APLICAR CAMBIOS</button>
+        <button onclick="copyData()" style="width:100%; padding:12px; background:#333; border:none; color:white; border-radius:8px; margin-top:10px;">COPIAR JSON</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
     <div class="modal" id="modal">
-        <p style="text-transform: uppercase; letter-spacing: 3px; color: var(--accent); margin-bottom: 0;">Resultado</p>
-        <h1 id="winnerName" style="font-size: 2.5rem; margin: 15px 0;">---</h1>
-        <h3 id="modalType" style="color: var(--text-dim); font-weight: 400;"></h3>
-        <button onclick="closeModal()">ACEPTAR</button>
+        <div class="modal-content">
+            <h3 id="modalRes" style="margin:0; color:var(--accent); text-transform: uppercase; letter-spacing: 2px;"></h3>
+            <h1 id="winnerName" style="margin:15px 0; font-size: 1.8rem;"></h1>
+            <button onclick="closeModal()" class="modal-btn">ACEPTAR</button>
+        </div>
     </div>
 
     <script>
-        const palette = ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#8ab17d', '#b5838d'];
-        let allItems = [];
-        let activeItems = [];
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let currentRotation = 0;
-        let isSpinning = false;
+        const initialWish = [
+  {
+    "NumeroItem": 1,
+    "NombreItem": "Secador Laifen Swift",
+    "PrecioItem": 169.99,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 2,
+    "NombreItem": "Depiladora IPL INNZA",
+    "PrecioItem": 89.99,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 3,
+    "NombreItem": "Shorts Deportivos CADMUS",
+    "PrecioItem": 39.99,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 4,
+    "NombreItem": "Sujetador Running Girl",
+    "PrecioItem": 23.99,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 5,
+    "NombreItem": "Labial Maybelline Vinyl Ink",
+    "PrecioItem": 0,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 6,
+    "NombreItem": "Corrector Westman Atelier",
+    "PrecioItem": 66.73,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 7,
+    "NombreItem": "Exfoliante Facial GUGUG",
+    "PrecioItem": 19.99,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 8,
+    "NombreItem": "Limpiador BeautyBio GLOfacial",
+    "PrecioItem": 249.00,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 9,
+    "NombreItem": "Máquina Terapia NuDerma",
+    "PrecioItem": 79.95,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 10,
+    "NombreItem": "Bolso Cruzado VONCOSS",
+    "PrecioItem": 25.99,
+    "Estado": "pendiente"
+  }
+];
+        document.getElementById('jsonWish').value = JSON.stringify(initialWish, null, 2);
 
-        function toggleSettings() { document.getElementById('setPanel').classList.toggle('open'); }
+        let wishlist = [], tiers = [], activeItems = [], bonusPool = [];
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        let currentRotation = 0, isSpinning = false, bonusActive = false;
+
+        function getDynamicColor(level) {
+            const colors = {
+                1: "#457b9d", // Pastel Blue
+                2: "#81b29a", // Sage Green
+                3: "#f2cc8f", // Pale Gold
+                4: "#f4a261", // Orange Vibrante
+                5: "#e76f51"  // Red Coral Intenso
+            };
+            return colors[level] || "#333";
+        }
+
+        function toggleBonus() {
+            const sec = document.getElementById('bonusSection');
+            bonusActive = (sec.style.display === 'none' || sec.style.display === '');
+            sec.style.display = bonusActive ? 'flex' : 'none';
+            document.getElementById('toggleBonusBtn').innerText = bonusActive ? '❌ CERRAR REGALOS' : '✨ REVELAR REGALOS MISTERIOSOS ✨';
+            if(bonusActive) setupMagicBoxes();
+        }
 
         function loadData() {
             try {
-                const inputVal = document.getElementById('jsonInput').value;
-                allItems = JSON.parse(inputVal);
-                
-                let pSigaTotal = parseInt(document.getElementById('sigaP').value) / 100;
-                let nSiga = parseInt(document.getElementById('sigaN').value);
+                wishlist = JSON.parse(document.getElementById('jsonWish').value);
+                tiers = JSON.parse(document.getElementById('jsonTiers').value);
+                const pts = parseInt(document.getElementById('currentPoints').value);
+                const pSiga = parseInt(document.getElementById('sigaP').value) / 100;
 
-                // CORRECCIÓN: Si no hay items de "Siga participando", la probabilidad reservada debe ser 0
-                if (nSiga <= 0) {
-                    pSigaTotal = 0;
-                }
+                const pending = wishlist.filter(i => i.PrecioItem > 0 && i.Estado === 'pendiente').map(i => {
+                    const tier = tiers.find(t => i.PrecioItem >= t.min && i.PrecioItem <= t.max) || tiers[0];
+                    return { ...i, type: 'prize', tier: tier, color: getDynamicColor(tier.level) };
+                });
 
-                const pendingPrizes = allItems.filter(i => i.Estado === "pendiente").map(i => ({...i, type:'prize'}));
-                activeItems = [...pendingPrizes];
-                
-                if (nSiga > 0) {
-                    const probPerSiga = pSigaTotal / nSiga;
-                    for(let i=0; i<nSiga; i++) {
-                        activeItems.push({ NombreItem: "☘️ Reintentar", PrecioItem: 0, type: 'siga', fixedProb: probPerSiga });
-                    }
-                }
+                const progress = Math.min(Math.max((pts - 5) / 15, 0), 1);
+                document.getElementById('luckMsg').innerText = progress === 1 ? "🔥 SUERTE INVERTIDA" : progress === 0 ? "🍀 SUERTE NORMAL" : "✨ SUERTE MEJORADA";
+                document.getElementById('luckMsg').style.color = progress > 0.5 ? "var(--accent)" : "var(--win)";
 
-                calculateWeights(pSigaTotal);
-                updateUILists();
+                const currentWeights = {};
+                tiers.forEach(t => {
+                    const mirror = tiers.find(mt => mt.level === (6 - t.level)) || t;
+                    currentWeights[t.level] = (t.weight * (1 - progress)) + (mirror.weight * progress);
+                });
+
+                const tiersInPlay = [...new Set(pending.map(p => p.tier.level))];
+                let totalW = 0;
+                tiersInPlay.forEach(l => totalW += currentWeights[l]);
+
+                const pAvailable = 1 - (pending.length > 0 ? pSiga : 0);
+                activeItems = pending.map(item => {
+                    const tProb = (currentWeights[item.tier.level] / totalW) * pAvailable;
+                    const count = pending.filter(p => p.tier.level === item.tier.level).length;
+                    return { ...item, prob: tProb / count };
+                });
+
+                if (activeItems.length > 0) activeItems.push({ NombreItem: "☘️ Reintentar", type: 'siga', prob: pSiga });
+
+                renderUI();
                 drawWheel();
-            } catch(e) { alert("Error en el formato JSON."); }
+                if(bonusActive) setupMagicBoxes();
+            } catch (e) { console.error(e); }
         }
 
-        function calculateWeights(pSigaTotal) {
-            const pAvailableForPrizes = 1 - pSigaTotal;
-            const prizes = activeItems.filter(i => i.type === 'prize');
-            
-            if (prizes.length === 0 && activeItems.length > 0) {
-                // Solo quedan items de reintento
-                activeItems.forEach(i => i.prob = 1 / activeItems.length);
-                return;
-            }
+        function setupMagicBoxes() {
+            const grid = document.getElementById('giftsGrid');
+            grid.innerHTML = "";
+            const pendientes = wishlist.filter(i => i.PrecioItem <= 0 && i.Estado === 'pendiente');
+            if(pendientes.length === 0) { grid.innerHTML = "<p>Sin regalos de $0</p>"; return; }
 
-            let totalInversePrice = 0;
-            prizes.forEach(i => totalInversePrice += (1 / i.PrecioItem));
+            bonusPool = [...pendientes.map(p => ({...p, isWin: true})), { NombreItem: "Siga Participando", isWin: false }];
+            bonusPool.sort(() => Math.random() - 0.5);
 
-            activeItems.forEach(item => {
-                if(item.type === 'prize') {
-                    item.prob = ((1 / item.PrecioItem) / totalInversePrice) * pAvailableForPrizes;
-                } else {
-                    item.prob = item.fixedProb;
-                }
+            bonusPool.forEach((item, index) => {
+                const box = document.createElement('div');
+                box.className = 'gift-box';
+                box.innerHTML = `<span class="gift-icon">🎁</span><div class="gift-content">${item.NombreItem}</div>`;
+                box.onclick = () => revealGift(index, box);
+                grid.appendChild(box);
             });
+        }
+
+        function revealGift(idx, box) {
+            if(box.classList.contains('open')) return;
+            const item = bonusPool[idx];
+            document.querySelectorAll('.gift-box').forEach((b, i) => {
+                b.classList.add('open');
+                if(i === idx) b.style.borderColor = "var(--accent)";
+            });
+
+            setTimeout(() => {
+                if(item.isWin) {
+                    const master = wishlist.find(x => x.NumeroItem === item.NumeroItem);
+                    if(master) master.Estado = 'ganado';
+                    confetti({ particleCount: 200, spread: 100 });
+                    document.getElementById('modalRes').innerText = "¡REGALO ABIERTO!";
+                } else { document.getElementById('modalRes').innerText = "CAJA VACÍA"; }
+                document.getElementById('winnerName').innerText = item.NombreItem;
+                document.getElementById('modal').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                renderUI();
+            }, 600);
+        }
+
+        function renderUI() {
+            const pList = document.getElementById('pendingList'), wList = document.getElementById('wonList');
+            pList.innerHTML = ""; wList.innerHTML = "";
+
+            const sorted = activeItems.filter(i => i.type === 'prize').sort((a,b) => b.prob - a.prob);
+            sorted.forEach(i => {
+                pList.innerHTML += `<div class="item-card" style="border-left-color:${i.color}">
+                    <span class="tier-tag" style="background:${i.color}">${i.tier.name}</span>
+                    <span class="prob-val">${(i.prob*100).toFixed(1)}%</span>
+                    <b>${i.NombreItem}</b><br><small>$${i.PrecioItem}</small></div>`;
+            });
+            wishlist.filter(i => i.PrecioItem <= 0 && i.Estado === 'pendiente').forEach(i => {
+                pList.innerHTML += `<div class="item-card" style="border-left-color:var(--bonus)">
+                    <span class="tier-tag" style="background:var(--bonus)">BONUS</span>
+                    <b>${i.NombreItem}</b></div>`;
+            });
+            wishlist.filter(i => i.Estado === 'ganado').forEach(i => {
+                wList.innerHTML += `<div class="item-card" style="opacity:0.6"><b>${i.NombreItem}</b><br><small>OBTENIDO ✅</small></div>`;
+            });
+            document.getElementById('jsonWish').value = JSON.stringify(wishlist, null, 2);
         }
 
         function drawWheel() {
-            const centerX = canvas.width/2;
-            const centerY = canvas.height/2;
-            const radius = canvas.width/2 - 20;
-            let startAngle = 0;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            activeItems.forEach((item, i) => {
-                const sliceAngle = item.prob * 2 * Math.PI;
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
-                ctx.fillStyle = item.type === 'siga' ? '#14161a' : palette[i % palette.length];
-                ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.1)";
-                ctx.stroke();
-
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(startAngle + sliceAngle / 2);
-                ctx.textAlign = "right";
-                ctx.fillStyle = "white";
-                ctx.font = "bold 16px Inter, sans-serif";
-                ctx.fillText(item.NombreItem.substring(0, 22), radius - 40, 8);
-                ctx.restore();
-                startAngle += sliceAngle;
+            const cx = canvas.width/2, cy = canvas.height/2, r = canvas.width/2 - 30;
+            let start = 0; ctx.clearRect(0,0,canvas.width,canvas.height);
+            activeItems.forEach(item => {
+                const slice = item.prob * 2 * Math.PI;
+                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, start, start + slice);
+                ctx.fillStyle = item.type === 'siga' ? '#0d1117' : item.color;
+                ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.stroke();
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(start + slice/2);
+                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 16px Inter";
+                ctx.fillText(item.NombreItem.substring(0,18), r - 40, 6); ctx.restore();
+                start += slice;
             });
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
-            ctx.fillStyle = "#d4a373";
-            ctx.fill();
         }
 
         function spin() {
-            if(isSpinning || activeItems.length === 0) return;
+            if (isSpinning || activeItems.length === 0) return;
+            const ptsInput = document.getElementById('currentPoints');
+            const pts = parseInt(ptsInput.value);
+            if (pts < 5) return;
+
+            // CAPTURAMOS el estado actual de la ruleta antes de resetear puntos
+            const itemsSnapshot = [...activeItems]; 
+            
             isSpinning = true;
             document.getElementById('spinBtn').disabled = true;
+            
+            // Visualmente reseteamos los puntos, pero NO llamamos a loadData() aún
+            ptsInput.value = 0; 
 
-            const duration = 6000; 
-            const extraRotations = 10 + Math.random() * 5;
-            const totalRotationToApply = extraRotations * 2 * Math.PI;
-            const startTimestamp = performance.now();
-
-            function animate(now) {
-                const elapsed = now - startTimestamp;
+            const duration = 6000, extra = 15 + Math.random()*5, totalRot = extra*2*Math.PI, startTime = performance.now();
+            
+            function anim(now) {
+                const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                const ease = 1 - Math.pow(1 - progress, 4);
-                const rotationAtFrame = currentRotation + (totalRotationToApply * ease);
-
+                const ease = 1 - Math.pow(1 - progress, 5);
+                const rot = currentRotation + (totalRot * ease);
+                
                 ctx.save();
                 ctx.translate(canvas.width/2, canvas.height/2);
-                ctx.rotate(rotationAtFrame);
+                ctx.rotate(rot);
                 ctx.translate(-canvas.width/2, -canvas.height/2);
-                drawWheel();
+                
+                // Dibujamos usando el snapshot para mantener las probabilidades aumentadas durante el giro
+                let tempStart = 0;
+                itemsSnapshot.forEach(item => {
+                    const slice = item.prob * 2 * Math.PI;
+                    ctx.beginPath(); ctx.moveTo(canvas.width/2, canvas.height/2);
+                    ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2 - 30, tempStart, tempStart + slice);
+                    ctx.fillStyle = item.type === 'siga' ? '#0d1117' : item.color;
+                    ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.stroke();
+                    ctx.save(); ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(tempStart + slice/2);
+                    ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 16px Inter";
+                    ctx.fillText(item.NombreItem.substring(0,18), (canvas.width/2 - 30) - 40, 6); ctx.restore();
+                    tempStart += slice;
+                });
                 ctx.restore();
 
-                if(progress < 1) requestAnimationFrame(animate);
-                else {
-                    currentRotation = rotationAtFrame % (2 * Math.PI);
-                    processWinner();
+                if(progress < 1) requestAnimationFrame(anim);
+                else { 
+                    currentRotation = rot % (Math.PI*2); 
+                    finishSpin(itemsSnapshot); 
                 }
             }
-            requestAnimationFrame(animate);
+            requestAnimationFrame(anim);
         }
 
-        function processWinner() {
-            let resultAngle = (1.5 * Math.PI - currentRotation) % (2 * Math.PI);
-            if (resultAngle < 0) resultAngle += 2 * Math.PI;
-
-            let accumulated = 0;
-            let winner = activeItems[0];
-
-            for(let item of activeItems) {
-                const slice = item.prob * 2 * Math.PI;
-                if (resultAngle >= accumulated && resultAngle < (accumulated + slice)) {
-                    winner = item;
-                    break;
-                }
-                accumulated += slice;
+        function finishSpin(itemsSnapshot) {
+            let target = (1.5 * Math.PI - currentRotation) % (Math.PI * 2);
+            if (target < 0) target += Math.PI * 2;
+            let acc = 0, winner = itemsSnapshot[0];
+            for(let i of itemsSnapshot) { 
+                acc += i.prob * 2 * Math.PI; 
+                if(target <= acc) { winner = i; break; } 
             }
-
+            
             if(winner.type === 'prize') {
-                const master = allItems.find(x => x.NumeroItem === winner.NumeroItem);
-                if(master) master.Estado = 'ganado';
-                confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-                document.getElementById('modalType').innerText = "¡A la lista de ganados!";
-            } else {
-                document.getElementById('modalType').innerText = "¡No te rindas!";
-            }
-
+                wishlist.find(x => x.NumeroItem === winner.NumeroItem).Estado = 'ganado';
+                confetti({ particleCount: 200, spread: 80, origin: {y: 0.6} });
+                document.getElementById('modalRes').innerText = "¡PREMIO OBTENIDO!";
+            } else { document.getElementById('modalRes').innerText = "SIGUE PARTICIPANDO"; }
+            
             document.getElementById('winnerName').innerText = winner.NombreItem;
             document.getElementById('modal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
-            updateUILists();
-        }
-
-        function updateUILists() {
-            document.getElementById('pendingList').innerHTML = allItems.filter(i => i.Estado === 'pendiente')
-                .map(i => `<div class="item-card pending-card"><b>${i.NombreItem}</b><span class="price-tag">$${i.PrecioItem}</span></div>`).join('');
-            document.getElementById('wonList').innerHTML = allItems.filter(i => i.Estado === 'ganado')
-                .map(i => `<div class="item-card won-card"><b>${i.NombreItem}</b><span class="price-tag">Ganado ✅</span></div>`).join('');
-            document.getElementById('jsonInput').value = JSON.stringify(allItems, null, 2);
+            renderUI();
         }
 
         function closeModal() {
@@ -409,14 +410,12 @@
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('spinBtn').disabled = false;
             isSpinning = false;
-            loadData();
+            loadData(); // RECIÉN AQUÍ recalculamos probabilidades para 0 puntos
         }
 
-        function copyJson() {
-            const txt = document.getElementById('jsonInput');
-            txt.select();
-            document.execCommand('copy');
-            alert("JSON copiado.");
+        function copyData() {
+            navigator.clipboard.writeText(document.getElementById('jsonWish').value);
+            alert("JSON copiado");
         }
 
         lucide.createIcons();
