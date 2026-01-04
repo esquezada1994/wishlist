@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist Roulette: Final Edition 💎</title>
+    <title>Wishlist Roulette Pro: Ultimate Control 📱🎰</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -16,52 +16,101 @@
             --bonus: #ec4899;
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-        .sidebar { width: 320px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #2d3139; }
+        /* --- Layout Responsivo --- */
+        .sidebar {
+            width: 320px;
+            background: var(--panel);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2d3139;
+            transition: 0.3s;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: radial-gradient(circle at center, #1c2128 0%, #0d0f14 100%);
+            overflow-y: auto;
+            padding: 30px 10px;
+        }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; overflow-y: auto; height: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #2d3139; padding: 10px 20px; box-sizing: border-box; }
+            .sidebar h2 { cursor: pointer; display: flex; justify-content: space-between; margin: 5px 0; font-size: 0.9rem; }
+            .sidebar .scroll-area { display: none; max-height: 300px; }
+            .sidebar.active .scroll-area { display: block; }
+            .wheel-box { width: 90vw !important; height: 90vw !important; }
+            .main-content { padding: 20px 0; }
+        }
+
         .scroll-area { flex: 1; overflow-y: auto; padding-right: 5px; }
 
-        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; padding: 30px 20px; }
+        .item-card {
+            background: #1c2128; padding: 12px; border-radius: 12px; margin-bottom: 10px;
+            position: relative; border-left: 5px solid #444;
+        }
 
-        .item-card { background: #1c2128; padding: 12px; border-radius: 12px; margin-bottom: 10px; position: relative; border-left: 5px solid #444; }
         .tier-tag { font-size: 0.6rem; text-transform: uppercase; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; display: inline-block; color: #fff; }
         .prob-val { position: absolute; right: 12px; bottom: 12px; font-weight: 800; color: var(--accent); font-size: 0.85rem; }
 
+        /* --- Ruleta --- */
         .wheel-box { position: relative; width: 480px; height: 480px; flex-shrink: 0; }
         #canvas { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #2d3139; }
         .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 50; }
 
         /* --- MINIJUEGO CAJAS --- */
-        .bonus-container { width: 100%; max-width: 600px; display: none; flex-direction: column; align-items: center; background: rgba(236, 72, 153, 0.05); padding: 25px; border-radius: 25px; border: 2px dashed var(--bonus); margin-top: 30px; }
-        .gifts-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 20px; }
-        .gift-box { width: 100px; height: 100px; background: var(--bonus); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: 0.3s; position: relative; }
-        .gift-box:hover { transform: scale(1.1) rotate(5deg); }
-        .gift-box.open { background: #1c2128; border: 2px solid var(--bonus); cursor: default; }
-        .gift-content { font-size: 0.7rem; text-align: center; font-weight: bold; display: none; padding: 5px; }
+        .bonus-container { width: 90%; max-width: 600px; display: none; flex-direction: column; align-items: center; background: rgba(236, 72, 153, 0.05); padding: 25px; border-radius: 25px; border: 2px dashed var(--bonus); margin: 30px 0; }
+        .gifts-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+        .gift-box { width: 80px; height: 80px; background: var(--bonus); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: 0.3s; position: relative; }
+        .gift-box.open { background: #1c2128; border: 2px solid var(--bonus); }
+        .gift-content { font-size: 0.6rem; text-align: center; font-weight: bold; display: none; padding: 2px; }
         .gift-box.open .gift-content { display: block; }
         .gift-box.open .gift-icon { display: none; }
 
-        .points-panel { background: #11141a; border: 2px solid var(--accent); padding: 10px 40px; border-radius: 25px; margin-bottom: 20px; text-align: center; }
-        .points-val { background: transparent; border: none; border-bottom: 2px solid var(--accent); color: var(--accent); font-size: 2rem; width: 80px; text-align: center; font-weight: 900; outline: none; }
+        /* --- UI --- */
+        .points-panel { background: #11141a; border: 2px solid var(--accent); padding: 10px 30px; border-radius: 25px; margin-bottom: 20px; text-align: center; }
+        .points-val { background: transparent; border: none; border-bottom: 2px solid var(--accent); color: var(--accent); font-size: 1.8rem; width: 70px; text-align: center; font-weight: 900; outline: none; }
         
-        button { border: none; border-radius: 50px; font-weight: 900; cursor: pointer; transition: 0.2s; }
-        .btn-spin { margin-top: 15px; padding: 15px 60px; background: var(--accent); color: #111; font-size: 1.1rem; box-shadow: 0 6px 0 #9b724b; }
-        .btn-toggle { background: transparent; color: var(--bonus); border: 2px solid var(--bonus); padding: 8px 20px; margin-top: 80px; font-size: 0.7rem; letter-spacing: 1px; }
+        .btn-spin { margin-top: 15px; padding: 15px 40px; background: var(--accent); color: #111; font-weight: 900; border: none; border-radius: 50px; cursor: pointer; width: 280px; box-shadow: 0 6px 0 #9b724b; }
+        .btn-toggle { background: transparent; color: var(--bonus); border: 2px solid var(--bonus); padding: 8px 20px; margin-top: 80px; font-size: 0.7rem; border-radius: 50px; cursor: pointer; }
 
-        .settings-side { position: fixed; right: -450px; top: 0; width: 400px; height: 100%; background: #11141a; padding: 25px; z-index: 100; transition: 0.4s; border-left: 2px solid var(--accent); overflow-y: auto; }
+        /* --- Settings Panel Refinado --- */
+        .settings-side { position: fixed; right: -450px; top: 0; width: 90%; max-width: 400px; height: 100%; background: #11141a; padding: 25px; z-index: 300; transition: 0.4s; border-left: 2px solid var(--accent); overflow-y: auto; }
         .settings-side.open { right: 0; }
-        textarea { width: 100%; background: #000; color: #8fb339; border: 1px solid #333; padding: 10px; font-family: monospace; font-size: 10px; margin-bottom: 15px; border-radius: 8px; }
+        
+        .json-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 15px; }
+        .json-controls { display: flex; gap: 8px; }
+        .control-btn { background: #2d3139; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; }
+        .control-btn:hover { background: #3d424d; }
+        .control-btn.danger:hover { background: #9b2226; }
 
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 40px; border-radius: 30px; z-index: 200; text-align: center; border: 2px solid var(--accent); width: 350px; }
-        .modal-content { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 199; }
-        .modal-btn { background: var(--accent); color: #111; padding: 12px 50px; border-radius: 12px; font-weight: 900; margin-top: 20px; }
+        textarea { width: 100%; background: #000; color: #8fb339; border: 1px solid #333; padding: 10px; font-family: monospace; font-size: 10px; border-radius: 8px; box-sizing: border-box; }
+
+        /* --- Modal --- */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 30px; border-radius: 30px; z-index: 400; text-align: center; border: 2px solid var(--accent); width: 85%; max-width: 350px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 399; }
+        .modal-btn { background: var(--accent); color: #111; padding: 12px 50px; border: none; border-radius: 12px; font-weight: 900; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2>⏳ PENDIENTES</h2>
+    <div class="sidebar" id="sidePending">
+        <h2 onclick="toggleSidebar('sidePending')">⏳ PENDIENTES <i data-lucide="chevron-down"></i></h2>
         <div class="scroll-area" id="pendingList"></div>
     </div>
 
@@ -75,58 +124,83 @@
         <div class="wheel-box">
             <div class="pointer"><svg width="40" height="50"><path d="M20 50 L40 10 L0 10 Z" fill="#d4a373" stroke="#000" stroke-width="2"/></svg></div>
             <canvas id="canvas" width="800" height="800"></canvas>
-            <button id="spinBtn" class="btn-spin" onclick="spin()" style="position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%); width: 300px;">GIRAR RULETA</button>
+            <button id="spinBtn" class="btn-spin" onclick="spin()" style="position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%);">GIRAR RULETA</button>
         </div>
 
         <button id="toggleBonusBtn" class="btn-toggle" onclick="toggleBonus()">✨ REVELAR REGALOS MISTERIOSOS ✨</button>
 
         <div id="bonusSection" class="bonus-container">
             <h3 style="color: var(--bonus); margin: 0; letter-spacing: 2px;">MAGIC GIFT BOXES</h3>
-            <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">Premios de $0. Elige una caja.</p>
+            <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">Dificultad adaptada. ¡Suerte!</p>
             <div class="gifts-grid" id="giftsGrid"></div>
         </div>
     </div>
 
-    <div class="sidebar" style="border-left: 1px solid #2d3139; border-right: none;">
-        <h2>🏆 GANADOS</h2>
+    <div class="sidebar" id="sideWon" style="border-left: 1px solid #2d3139; border-right: none;">
+        <h2 onclick="toggleSidebar('sideWon')">🏆 GANADOS <i data-lucide="chevron-down"></i></h2>
         <div class="scroll-area" id="wonList"></div>
     </div>
 
-    <button style="position:fixed; top:20px; right:20px; z-index:110; background:none; border:none; color:var(--accent); cursor:pointer;" onclick="document.getElementById('setPanel').classList.toggle('open')">
+    <button style="position:fixed; top:20px; right:20px; z-index:310; background:rgba(0,0,0,0.5); border:1px solid var(--accent); color:var(--accent); cursor:pointer; padding: 8px; border-radius: 50%;" onclick="document.getElementById('setPanel').classList.toggle('open')">
         <i data-lucide="settings"></i>
     </button>
 
     <div class="settings-side" id="setPanel">
-        <h3 style="color:var(--accent); margin-top:0">Configuración</h3>
-        <label style="font-size:0.7rem">1. Wishlist (JSON Principal)</label>
-        <textarea id="jsonWish" style="height:250px"></textarea>
+        <h3 style="color:var(--accent); margin-top:0">Ajustes Maestro</h3>
         
-        <label style="font-size:0.7rem">2. Niveles y Pesos (JSON Tiers)</label>
-        <textarea id="jsonTiers" style="height:150px">[
-  {"level": 1, "name": "Nivel 1", "min": 1, "max": 50, "weight": 80},
-  {"level": 2, "name": "Nivel 2", "min": 51, "max": 100, "weight": 10},
-  {"level": 3, "name": "Nivel 3", "min": 101, "max": 150, "weight":6},
+        <div class="json-header">
+            <label style="font-size: 0.7rem">1. Wishlist (JSON)</label>
+            <div class="json-controls">
+                <button class="control-btn" onclick="copyText('jsonWish')"><i data-lucide="copy" style="width:12px"></i></button>
+                <button class="control-btn danger" onclick="clearText('jsonWish')"><i data-lucide="trash-2" style="width:12px"></i></button>
+            </div>
+        </div>
+        <textarea id="jsonWish" style="height:200px"></textarea>
+
+        <div class="json-header">
+            <label style="font-size: 0.7rem">2. Niveles (JSON)</label>
+            <div class="json-controls">
+                <button class="control-btn" onclick="copyText('jsonTiers')"><i data-lucide="copy" style="width:12px"></i></button>
+                <button class="control-btn danger" onclick="clearText('jsonTiers')"><i data-lucide="trash-2" style="width:12px"></i></button>
+            </div>
+        </div>
+        <textarea id="jsonTiers" style="height:120px">[
+  {"level": 1, "name": "Nivel 1", "min": 1, "max": 50, "weight": 84},
+  {"level": 2, "name": "Nivel 2", "min": 51, "max": 100, "weight": 7},
+  {"level": 3, "name": "Nivel 3", "min": 101, "max": 150, "weight": 5},
   {"level": 4, "name": "Nivel 4", "min": 151, "max": 250, "weight": 3},
   {"level": 5, "name": "Nivel 5", "min": 251, "max": 9999, "weight": 1}
 ]</textarea>
         
-        <label style="font-size:0.7rem">Siga Participando (%)</label>
-        <input type="number" id="sigaP" value="1" style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #333; margin-bottom:15px; border-radius:8px">
-
-        <button onclick="loadData()" style="width:100%; padding:12px; background:var(--win); border:none; color:white; border-radius:8px; font-weight:bold;">APLICAR CAMBIOS</button>
-        <button onclick="copyData()" style="width:100%; padding:12px; background:#333; border:none; color:white; border-radius:8px; margin-top:10px;">COPIAR JSON</button>
+        <label style="font-size: 0.7rem; display:block; margin-top:15px">Siga Participando (%)</label>
+        <input type="number" id="sigaP" value="1" style="width:100%; margin-bottom:15px; background:#000; color:#fff; border:1px solid #333; padding: 10px; border-radius: 8px;">
+        
+        <button onclick="loadData()" style="width:100%; padding:14px; background:var(--win); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer;">APLICAR CAMBIOS</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
     <div class="modal" id="modal">
         <div class="modal-content">
-            <h3 id="modalRes" style="margin:0; color:var(--accent); text-transform: uppercase; letter-spacing: 2px;"></h3>
-            <h1 id="winnerName" style="margin:15px 0; font-size: 1.8rem;"></h1>
+            <h3 id="modalRes" style="margin:0; color:var(--accent); text-transform: uppercase;"></h3>
+            <h1 id="winnerName" style="margin:15px 0; font-size: 1.5rem;"></h1>
             <button onclick="closeModal()" class="modal-btn">ACEPTAR</button>
         </div>
     </div>
 
     <script>
+        // Funciones de control añadidas
+        function copyText(id) {
+            const text = document.getElementById(id).value;
+            navigator.clipboard.writeText(text);
+            alert("Contenido copiado.");
+        }
+
+        function clearText(id) {
+            if(confirm("¿Seguro que quieres limpiar este campo?")) {
+                document.getElementById(id).value = "";
+            }
+        }
+
         const initialWish = [
   {
     "NumeroItem": 1,
@@ -144,7 +218,7 @@
     "NumeroItem": 3,
     "NombreItem": "Shorts Deportivos CADMUS",
     "PrecioItem": 39.99,
-    "Estado": "pendiente"
+    "Estado": "ganado"
   },
   {
     "NumeroItem": 4,
@@ -156,7 +230,7 @@
     "NumeroItem": 5,
     "NombreItem": "Labial Maybelline Vinyl Ink",
     "PrecioItem": 0,
-    "Estado": "pendiente"
+    "Estado": "ganado"
   },
   {
     "NumeroItem": 6,
@@ -173,7 +247,7 @@
   {
     "NumeroItem": 8,
     "NombreItem": "Limpiador BeautyBio GLOfacial",
-    "PrecioItem": 249.00,
+    "PrecioItem": 249,
     "Estado": "pendiente"
   },
   {
@@ -186,7 +260,7 @@
     "NumeroItem": 10,
     "NombreItem": "Bolso Cruzado VONCOSS",
     "PrecioItem": 25.99,
-    "Estado": "pendiente"
+    "Estado": "ganado"
   }
 ];
         document.getElementById('jsonWish').value = JSON.stringify(initialWish, null, 2);
@@ -195,14 +269,14 @@
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         let currentRotation = 0, isSpinning = false, bonusActive = false;
 
-        function getDynamicColor(level) {
-            const colors = {
-                1: "#457b9d", // Pastel Blue
-                2: "#81b29a", // Sage Green
-                3: "#f2cc8f", // Pale Gold
-                4: "#f4a261", // Orange Vibrante
-                5: "#e76f51"  // Red Coral Intenso
-            };
+        function toggleSidebar(id) {
+            if (window.innerWidth <= 900) {
+                document.getElementById(id).classList.toggle('active');
+            }
+        }
+
+        function getLevelColor(level) {
+            const colors = { 1: "#457b9d", 2: "#81b29a", 3: "#f2cc8f", 4: "#f4a261", 5: "#e76f51" };
             return colors[level] || "#333";
         }
 
@@ -223,13 +297,10 @@
 
                 const pending = wishlist.filter(i => i.PrecioItem > 0 && i.Estado === 'pendiente').map(i => {
                     const tier = tiers.find(t => i.PrecioItem >= t.min && i.PrecioItem <= t.max) || tiers[0];
-                    return { ...i, type: 'prize', tier: tier, color: getDynamicColor(tier.level) };
+                    return { ...i, type: 'prize', tier: tier, color: getLevelColor(tier.level) };
                 });
 
                 const progress = Math.min(Math.max((pts - 5) / 15, 0), 1);
-                document.getElementById('luckMsg').innerText = progress === 1 ? "🔥 SUERTE INVERTIDA" : progress === 0 ? "🍀 SUERTE NORMAL" : "✨ SUERTE MEJORADA";
-                document.getElementById('luckMsg').style.color = progress > 0.5 ? "var(--accent)" : "var(--win)";
-
                 const currentWeights = {};
                 tiers.forEach(t => {
                     const mirror = tiers.find(mt => mt.level === (6 - t.level)) || t;
@@ -246,7 +317,6 @@
                     const count = pending.filter(p => p.tier.level === item.tier.level).length;
                     return { ...item, prob: tProb / count };
                 });
-
                 if (activeItems.length > 0) activeItems.push({ NombreItem: "☘️ Reintentar", type: 'siga', prob: pSiga });
 
                 renderUI();
@@ -259,9 +329,11 @@
             const grid = document.getElementById('giftsGrid');
             grid.innerHTML = "";
             const pendientes = wishlist.filter(i => i.PrecioItem <= 0 && i.Estado === 'pendiente');
-            if(pendientes.length === 0) { grid.innerHTML = "<p>Sin regalos de $0</p>"; return; }
+            if(pendientes.length === 0) { grid.innerHTML = "<p>Sin regalos.</p>"; return; }
 
-            bonusPool = [...pendientes.map(p => ({...p, isWin: true})), { NombreItem: "Siga Participando", isWin: false }];
+            const numSigas = Math.max(1, Math.floor(pendientes.length / 2));
+            bonusPool = [...pendientes.map(p => ({...p, isWin: true}))];
+            for(let i=0; i<numSigas; i++) bonusPool.push({ NombreItem: "Siga Participando", isWin: false });
             bonusPool.sort(() => Math.random() - 0.5);
 
             bonusPool.forEach((item, index) => {
@@ -286,8 +358,8 @@
                     const master = wishlist.find(x => x.NumeroItem === item.NumeroItem);
                     if(master) master.Estado = 'ganado';
                     confetti({ particleCount: 200, spread: 100 });
-                    document.getElementById('modalRes').innerText = "¡REGALO ABIERTO!";
-                } else { document.getElementById('modalRes').innerText = "CAJA VACÍA"; }
+                    document.getElementById('modalRes').innerText = "¡PREMIO OBTENIDO!";
+                } else { document.getElementById('modalRes').innerText = "VACIÓ"; }
                 document.getElementById('winnerName').innerText = item.NombreItem;
                 document.getElementById('modal').style.display = 'block';
                 document.getElementById('overlay').style.display = 'block';
@@ -312,7 +384,10 @@
                     <b>${i.NombreItem}</b></div>`;
             });
             wishlist.filter(i => i.Estado === 'ganado').forEach(i => {
-                wList.innerHTML += `<div class="item-card" style="opacity:0.6"><b>${i.NombreItem}</b><br><small>OBTENIDO ✅</small></div>`;
+                const tier = tiers.find(t => i.PrecioItem >= t.min && i.PrecioItem <= t.max);
+                const color = i.PrecioItem <= 0 ? 'var(--bonus)' : (tier ? getLevelColor(tier.level) : "#444");
+                wList.innerHTML += `<div class="item-card" style="border-left-color:${color}; opacity:0.6">
+                    <b>${i.NombreItem}</b><br><small>GANADO ✅</small></div>`;
             });
             document.getElementById('jsonWish').value = JSON.stringify(wishlist, null, 2);
         }
@@ -324,7 +399,7 @@
                 const slice = item.prob * 2 * Math.PI;
                 ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, start, start + slice);
                 ctx.fillStyle = item.type === 'siga' ? '#0d1117' : item.color;
-                ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.stroke();
+                ctx.fill(); ctx.stroke();
                 ctx.save(); ctx.translate(cx, cy); ctx.rotate(start + slice/2);
                 ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 16px Inter";
                 ctx.fillText(item.NombreItem.substring(0,18), r - 40, 6); ctx.restore();
@@ -334,71 +409,45 @@
 
         function spin() {
             if (isSpinning || activeItems.length === 0) return;
-            const ptsInput = document.getElementById('currentPoints');
-            const pts = parseInt(ptsInput.value);
-            if (pts < 5) return;
-
-            // CAPTURAMOS el estado actual de la ruleta antes de resetear puntos
+            const ptsIn = document.getElementById('currentPoints');
+            if (parseInt(ptsIn.value) < 5) return;
             const itemsSnapshot = [...activeItems]; 
-            
-            isSpinning = true;
-            document.getElementById('spinBtn').disabled = true;
-            
-            // Visualmente reseteamos los puntos, pero NO llamamos a loadData() aún
-            ptsInput.value = 0; 
-
-            const duration = 6000, extra = 15 + Math.random()*5, totalRot = extra*2*Math.PI, startTime = performance.now();
-            
+            isSpinning = true; document.getElementById('spinBtn').disabled = true;
+            ptsIn.value = 0; 
+            const duration = 6000, extra = 15 + Math.random()*5, totalRot = extra*2*Math.PI, startT = performance.now();
             function anim(now) {
-                const elapsed = now - startTime;
+                const elapsed = now - startT;
                 const progress = Math.min(elapsed / duration, 1);
                 const ease = 1 - Math.pow(1 - progress, 5);
                 const rot = currentRotation + (totalRot * ease);
-                
-                ctx.save();
-                ctx.translate(canvas.width/2, canvas.height/2);
-                ctx.rotate(rot);
+                ctx.save(); ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(rot);
                 ctx.translate(-canvas.width/2, -canvas.height/2);
-                
-                // Dibujamos usando el snapshot para mantener las probabilidades aumentadas durante el giro
                 let tempStart = 0;
                 itemsSnapshot.forEach(item => {
                     const slice = item.prob * 2 * Math.PI;
                     ctx.beginPath(); ctx.moveTo(canvas.width/2, canvas.height/2);
                     ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2 - 30, tempStart, tempStart + slice);
                     ctx.fillStyle = item.type === 'siga' ? '#0d1117' : item.color;
-                    ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.stroke();
-                    ctx.save(); ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(tempStart + slice/2);
-                    ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 16px Inter";
-                    ctx.fillText(item.NombreItem.substring(0,18), (canvas.width/2 - 30) - 40, 6); ctx.restore();
+                    ctx.fill(); ctx.stroke();
                     tempStart += slice;
                 });
                 ctx.restore();
-
                 if(progress < 1) requestAnimationFrame(anim);
-                else { 
-                    currentRotation = rot % (Math.PI*2); 
-                    finishSpin(itemsSnapshot); 
-                }
+                else { currentRotation = rot % (Math.PI*2); finishSpin(itemsSnapshot); }
             }
             requestAnimationFrame(anim);
         }
 
-        function finishSpin(itemsSnapshot) {
+        function finishSpin(snap) {
             let target = (1.5 * Math.PI - currentRotation) % (Math.PI * 2);
             if (target < 0) target += Math.PI * 2;
-            let acc = 0, winner = itemsSnapshot[0];
-            for(let i of itemsSnapshot) { 
-                acc += i.prob * 2 * Math.PI; 
-                if(target <= acc) { winner = i; break; } 
-            }
-            
+            let acc = 0, winner = snap[0];
+            for(let i of snap) { acc += i.prob * 2 * Math.PI; if(target <= acc) { winner = i; break; } }
             if(winner.type === 'prize') {
                 wishlist.find(x => x.NumeroItem === winner.NumeroItem).Estado = 'ganado';
                 confetti({ particleCount: 200, spread: 80, origin: {y: 0.6} });
-                document.getElementById('modalRes').innerText = "¡PREMIO OBTENIDO!";
-            } else { document.getElementById('modalRes').innerText = "SIGUE PARTICIPANDO"; }
-            
+                document.getElementById('modalRes').innerText = "¡LOGRADO!";
+            } else { document.getElementById('modalRes').innerText = "INTENTA OTRA VEZ"; }
             document.getElementById('winnerName').innerText = winner.NombreItem;
             document.getElementById('modal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
@@ -409,13 +458,7 @@
             document.getElementById('modal').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('spinBtn').disabled = false;
-            isSpinning = false;
-            loadData(); // RECIÉN AQUÍ recalculamos probabilidades para 0 puntos
-        }
-
-        function copyData() {
-            navigator.clipboard.writeText(document.getElementById('jsonWish').value);
-            alert("JSON copiado");
+            isSpinning = false; loadData();
         }
 
         lucide.createIcons();
