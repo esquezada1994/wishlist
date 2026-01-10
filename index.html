@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist Roulette Pro: Ultimate Control 📱🎰</title>
+    <title>Wishlist Roulette Pro: Bonus Modes 📱🎰</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -26,7 +26,7 @@
             overflow: hidden;
         }
 
-        /* --- Layout Responsivo --- */
+        /* --- Layout --- */
         .sidebar {
             width: 320px;
             background: var(--panel);
@@ -73,7 +73,7 @@
         #canvas { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #2d3139; }
         .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 50; }
 
-        /* --- MINIJUEGO CAJAS --- */
+        /* --- BONUS GAME --- */
         .bonus-container { width: 90%; max-width: 600px; display: none; flex-direction: column; align-items: center; background: rgba(236, 72, 153, 0.05); padding: 25px; border-radius: 25px; border: 2px dashed var(--bonus); margin: 30px 0; }
         .gifts-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
         .gift-box { width: 80px; height: 80px; background: var(--bonus); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: 0.3s; position: relative; }
@@ -89,17 +89,13 @@
         .btn-spin { margin-top: 15px; padding: 15px 40px; background: var(--accent); color: #111; font-weight: 900; border: none; border-radius: 50px; cursor: pointer; width: 280px; box-shadow: 0 6px 0 #9b724b; }
         .btn-toggle { background: transparent; color: var(--bonus); border: 2px solid var(--bonus); padding: 8px 20px; margin-top: 80px; font-size: 0.7rem; border-radius: 50px; cursor: pointer; }
 
-        /* --- Settings Panel Refinado --- */
+        /* --- Settings --- */
         .settings-side { position: fixed; right: -450px; top: 0; width: 90%; max-width: 400px; height: 100%; background: #11141a; padding: 25px; z-index: 300; transition: 0.4s; border-left: 2px solid var(--accent); overflow-y: auto; }
         .settings-side.open { right: 0; }
-        
         .json-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 15px; }
-        .json-controls { display: flex; gap: 8px; }
-        .control-btn { background: #2d3139; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; }
-        .control-btn:hover { background: #3d424d; }
-        .control-btn.danger:hover { background: #9b2226; }
-
+        .control-btn { background: #2d3139; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
         textarea { width: 100%; background: #000; color: #8fb339; border: 1px solid #333; padding: 10px; font-family: monospace; font-size: 10px; border-radius: 8px; box-sizing: border-box; }
+        select { width: 100%; padding: 10px; background: #000; color: #fff; border: 1px solid #333; border-radius: 8px; margin-bottom: 15px; }
 
         /* --- Modal --- */
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 30px; border-radius: 30px; z-index: 400; text-align: center; border: 2px solid var(--accent); width: 85%; max-width: 350px; }
@@ -117,7 +113,7 @@
     <div class="main-content">
         <div class="points-panel">
             <div style="font-size: 0.6rem; letter-spacing: 2px; color: var(--accent);">PUNTOS ACUMULADOS</div>
-            <input type="number" id="currentPoints" value="5" step="5" min="0" class="points-val" onchange="loadData()">
+            <input type="number" id="currentPoints" value="5" step="5" min="5" class="points-val" onchange="loadData()">
             <div id="luckMsg" style="font-size: 0.7rem; font-weight: bold; margin-top: 5px;"></div>
         </div>
 
@@ -131,7 +127,7 @@
 
         <div id="bonusSection" class="bonus-container">
             <h3 style="color: var(--bonus); margin: 0; letter-spacing: 2px;">MAGIC GIFT BOXES</h3>
-            <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">Dificultad adaptada. ¡Suerte!</p>
+            <p id="bonusInstruction" style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">¡Suerte!</p>
             <div class="gifts-grid" id="giftsGrid"></div>
         </div>
     </div>
@@ -152,17 +148,19 @@
             <label style="font-size: 0.7rem">1. Wishlist (JSON)</label>
             <div class="json-controls">
                 <button class="control-btn" onclick="copyText('jsonWish')"><i data-lucide="copy" style="width:12px"></i></button>
-                <button class="control-btn danger" onclick="clearText('jsonWish')"><i data-lucide="trash-2" style="width:12px"></i></button>
+                <button class="control-btn" style="background:#9b2226" onclick="clearText('jsonWish')"><i data-lucide="trash-2" style="width:12px"></i></button>
             </div>
         </div>
-        <textarea id="jsonWish" style="height:200px"></textarea>
+        <textarea id="jsonWish" style="height:150px"></textarea>
+
+        <label style="font-size: 0.7rem; margin-top:10px; display:block;">Modalidad Bonus ($0)</label>
+        <select id="bonusMode" onchange="loadData()">
+            <option value="hardcore" selected>Hardcore (1 a 1)</option>
+            <option value="progressive">Progresivo (1 cada 2 items)</option>
+        </select>
 
         <div class="json-header">
             <label style="font-size: 0.7rem">2. Niveles (JSON)</label>
-            <div class="json-controls">
-                <button class="control-btn" onclick="copyText('jsonTiers')"><i data-lucide="copy" style="width:12px"></i></button>
-                <button class="control-btn danger" onclick="clearText('jsonTiers')"><i data-lucide="trash-2" style="width:12px"></i></button>
-            </div>
         </div>
         <textarea id="jsonTiers" style="height:120px">[
   {"level": 1, "name": "Nivel 1", "min": 1, "max": 50, "weight": 84},
@@ -172,113 +170,116 @@
   {"level": 5, "name": "Nivel 5", "min": 251, "max": 9999, "weight": 1}
 ]</textarea>
         
-        <label style="font-size: 0.7rem; display:block; margin-top:15px">Siga Participando (%)</label>
+        <label style="font-size: 0.7rem; display:block; margin-top:15px">Siga Participando Ruleta (%)</label>
         <input type="number" id="sigaP" value="1" style="width:100%; margin-bottom:15px; background:#000; color:#fff; border:1px solid #333; padding: 10px; border-radius: 8px;">
         
-        <button onclick="loadData()" style="width:100%; padding:14px; background:var(--win); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer;">APLICAR CAMBIOS</button>
+        <button onclick="loadData()" style="width:100%; padding:14px; background:var(--win); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer;">APLICAR</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
     <div class="modal" id="modal">
         <div class="modal-content">
-            <h3 id="modalRes" style="margin:0; color:var(--accent); text-transform: uppercase;"></h3>
+            <h3 id="modalRes" style="margin:0; color:var(--accent);"></h3>
             <h1 id="winnerName" style="margin:15px 0; font-size: 1.5rem;"></h1>
             <button onclick="closeModal()" class="modal-btn">ACEPTAR</button>
         </div>
     </div>
 
     <script>
-        // Funciones de control añadidas
         function copyText(id) {
             const text = document.getElementById(id).value;
             navigator.clipboard.writeText(text);
-            alert("Contenido copiado.");
+            alert("Copiado.");
         }
 
         function clearText(id) {
-            if(confirm("¿Seguro que quieres limpiar este campo?")) {
-                document.getElementById(id).value = "";
-            }
+            if(confirm("¿Limpiar campo?")) document.getElementById(id).value = "";
         }
 
         const initialWish = [
   {
     "NumeroItem": 1,
-    "NombreItem": "Calcetines Yoga Antideslizantes Diu Life",
-    "PrecioItem": 0,
-    "Estado": "pendiente"
+    "NombreItem": "Kindle Paperwhite 16GB",
+    "PrecioItem": 179.99,
+    "Estado": "ganado"
   },
   {
     "NumeroItem": 2,
-    "NombreItem": "Brochas Maquillaje Viaje Blavvennt",
+    "NombreItem": "Calcetines Pilates Diu Life",
     "PrecioItem": 0,
     "Estado": "pendiente"
   },
   {
     "NumeroItem": 3,
-    "NombreItem": "Gua Sha Cuarzo Rosa PLANTIFIQUE",
+    "NombreItem": "Mini Brochas Maquillaje",
+    "PrecioItem": 0,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 4,
+    "NombreItem": "Gua Sha PLANTIFIQUE",
     "PrecioItem": 0,
     "Estado": "ganado"
   },
   {
-    "NumeroItem": 4,
-    "NombreItem": "Rodillo de Hielo Facial Fronnor",
+    "NumeroItem": 5,
+    "NombreItem": "Rodillo de Hielo Fronnor",
     "PrecioItem": 0,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 5,
-    "NombreItem": "Secador de Pelo Laifen Swift",
+    "NumeroItem": 6,
+    "NombreItem": "Secador Laifen Swift",
     "PrecioItem": 169.99,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 6,
+    "NumeroItem": 7,
     "NombreItem": "Depiladora IPL INNZA",
     "PrecioItem": 89.99,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 7,
-    "NombreItem": "Short Deportivo 2 en 1 CADMUS",
-    "PrecioItem": 39.99,
-    "Estado": "ganado"
-  },
-  {
     "NumeroItem": 8,
-    "NombreItem": "Sujetador Deportivo Running Girl",
-    "PrecioItem": 23.99,
+    "NombreItem": "Shorts Deportivos CADMUS",
+    "PrecioItem": 39.99,
     "Estado": "pendiente"
   },
   {
     "NumeroItem": 9,
+    "NombreItem": "Sujetador Running Girl",
+    "PrecioItem": 23.99,
+    "Estado": "pendiente"
+  },
+  {
+    "NumeroItem": 10,
     "NombreItem": "Corrector Westman Atelier",
     "PrecioItem": 66.73,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 10,
-    "NombreItem": "Exfoliante Facial GUGUG",
+    "NumeroItem": 11,
+    "NombreItem": "Espátula Facial GUGUG",
     "PrecioItem": 19.99,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 11,
-    "NombreItem": "Limpiador Facial BeautyBio GLOfacial",
+    "NumeroItem": 12,
+    "NombreItem": "BeautyBio GLOfacial",
     "PrecioItem": 249.00,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 12,
-    "NombreItem": "Máquina Terapia Facial NuDerma",
-    "PrecioItem": 79.95,
+    "NumeroItem": 13,
+    "NombreItem": "Máquina NuDerma",
+    "PrecioItem": 59.95,
     "Estado": "pendiente"
   },
   {
-    "NumeroItem": 13,
+    "NumeroItem": 14,
     "NombreItem": "Bolso Cruzado VONCOSS",
     "PrecioItem": 25.99,
-    "Estado": "ganado"
+    "Estado": "pendiente"
   }
 ];
         document.getElementById('jsonWish').value = JSON.stringify(initialWish, null, 2);
@@ -288,9 +289,7 @@
         let currentRotation = 0, isSpinning = false, bonusActive = false;
 
         function toggleSidebar(id) {
-            if (window.innerWidth <= 900) {
-                document.getElementById(id).classList.toggle('active');
-            }
+            if (window.innerWidth <= 900) document.getElementById(id).classList.toggle('active');
         }
 
         function getLevelColor(level) {
@@ -345,13 +344,31 @@
 
         function setupMagicBoxes() {
             const grid = document.getElementById('giftsGrid');
+            const instruction = document.getElementById('bonusInstruction');
             grid.innerHTML = "";
             const pendientes = wishlist.filter(i => i.PrecioItem <= 0 && i.Estado === 'pendiente');
-            if(pendientes.length === 0) { grid.innerHTML = "<p>Sin regalos.</p>"; return; }
+            
+            if(pendientes.length === 0) {
+                grid.innerHTML = "<p>Sin regalos pendientes.</p>";
+                return;
+            }
 
-            const numSigas = Math.max(1, Math.floor(pendientes.length / 2));
+            const mode = document.getElementById('bonusMode').value;
+            let numSigas;
+
+            if (mode === 'progressive') {
+                // Lógica: 1:1, 3:2, 5:3 -> Math.ceil(n/2)
+                numSigas = Math.ceil(pendientes.length / 2);
+                instruction.innerText = `Modo Progresivo: ${pendientes.length} premios vs ${numSigas} fallos.`;
+            } else {
+                // Lógica: 1:1 -> n fallos por n items
+                numSigas = pendientes.length;
+                instruction.innerText = `Modo Hardcore: 50% probabilidad por caja.`;
+            }
+
             bonusPool = [...pendientes.map(p => ({...p, isWin: true}))];
             for(let i=0; i<numSigas; i++) bonusPool.push({ NombreItem: "Siga Participando", isWin: false });
+            
             bonusPool.sort(() => Math.random() - 0.5);
 
             bonusPool.forEach((item, index) => {
@@ -429,9 +446,9 @@
             if (isSpinning || activeItems.length === 0) return;
             const ptsIn = document.getElementById('currentPoints');
             if (parseInt(ptsIn.value) < 5) return;
-            const itemsSnapshot = [...activeItems]; 
+            const snap = [...activeItems]; 
             isSpinning = true; document.getElementById('spinBtn').disabled = true;
-            ptsIn.value = 0; 
+            ptsIn.value = 5; 
             const duration = 6000, extra = 15 + Math.random()*5, totalRot = extra*2*Math.PI, startT = performance.now();
             function anim(now) {
                 const elapsed = now - startT;
@@ -441,7 +458,7 @@
                 ctx.save(); ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(rot);
                 ctx.translate(-canvas.width/2, -canvas.height/2);
                 let tempStart = 0;
-                itemsSnapshot.forEach(item => {
+                snap.forEach(item => {
                     const slice = item.prob * 2 * Math.PI;
                     ctx.beginPath(); ctx.moveTo(canvas.width/2, canvas.height/2);
                     ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2 - 30, tempStart, tempStart + slice);
@@ -451,7 +468,7 @@
                 });
                 ctx.restore();
                 if(progress < 1) requestAnimationFrame(anim);
-                else { currentRotation = rot % (Math.PI*2); finishSpin(itemsSnapshot); }
+                else { currentRotation = rot % (Math.PI*2); finishSpin(snap); }
             }
             requestAnimationFrame(anim);
         }
